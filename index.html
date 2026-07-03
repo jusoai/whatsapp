@@ -1,0 +1,2397 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WhatsApp Scanner v5.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+    </script>
+    <style>
+        /* ─── CSS VARIABLES ─── */
+        :root {
+            /* Light Theme (Default) */
+            --bg-primary: #f0f2f6;
+            --bg-secondary: #ffffff;
+            --bg-card: #f8f9fc;
+            --bg-input: #f0f2f6;
+            --text-primary: #1a1a2e;
+            --text-secondary: #3a3a5a;
+            --text-muted: #7a7a9a;
+            --text-light: #5a5a7a;
+            --border-color: #e0e4ec;
+            --border-light: #e8ecf2;
+            --shadow-color: rgba(0, 0, 0, 0.06);
+            --accent: #1a7a5a;
+            --accent-glow: rgba(26, 122, 90, 0.15);
+            --accent-dim: rgba(26, 122, 90, 0.05);
+            --terminal-bg: #f8f9fc;
+            --terminal-text: #1a7a5a;
+            --status-bg: #eafaf3;
+            --hack-bg: #f8f9fc;
+            --hack-border: #e0e4ec;
+            --placeholder-bg: #e8ecf2;
+            --placeholder-color: #4a4a6a;
+            --url-hint-bg: rgba(255, 255, 255, 0.95);
+            --url-hint-border: #e0e4ec;
+            --success-color: #1a7a5a;
+            --credit-ready: #1a7a5a;
+            --credit-low: #ff4466;
+            --credit-insufficient: #ff4466;
+            --blur-overlay: rgba(255, 255, 255, 0.3);
+            --blur-filter: blur(8px);
+            --custom-alert-bg: rgba(255, 255, 255, 0.95);
+            --custom-alert-border: #e0e4ec;
+            --custom-alert-text: #1a1a2e;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #111118;
+            --bg-card: #1a1a2a;
+            --bg-input: #1a1a2a;
+            --text-primary: #e8e8f0;
+            --text-secondary: #b8b8d0;
+            --text-muted: #8a8aaa;
+            --text-light: #a0a0b8;
+            --border-color: #2a2a4a;
+            --border-light: #2a2a4a;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --accent: #44ddaa;
+            --accent-glow: rgba(68, 221, 170, 0.15);
+            --accent-dim: rgba(68, 221, 170, 0.05);
+            --terminal-bg: #0d0d1a;
+            --terminal-text: #44ddaa;
+            --status-bg: #1a2a22;
+            --hack-bg: #1a1a30;
+            --hack-border: #2a2a4a;
+            --placeholder-bg: #2a2a4a;
+            --placeholder-color: #8a8aaa;
+            --url-hint-bg: rgba(22, 22, 42, 0.95);
+            --url-hint-border: #2a2a4a;
+            --success-color: #44ddaa;
+            --credit-ready: #44ddaa;
+            --credit-low: #ff4466;
+            --credit-insufficient: #ff4466;
+            --blur-overlay: rgba(0, 0, 0, 0.5);
+            --custom-alert-bg: #111118;
+            --custom-alert-border: #2a2a4a;
+            --custom-alert-text: #e8e8f0;
+        }
+
+        /* ─── RESET & BASE ─── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* ─── ANIMATED BACKGROUND ─── */
+        .bg-effects {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .bg-effects .grid-lines {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(26, 122, 90, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(26, 122, 90, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        [data-theme="dark"] .bg-effects .grid-lines {
+            background-image:
+                linear-gradient(rgba(68, 221, 170, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(68, 221, 170, 0.02) 1px, transparent 1px);
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(60px, 60px); }
+        }
+
+        .bg-effects .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.08;
+            animation: orbFloat 15s ease-in-out infinite alternate;
+        }
+
+        .bg-effects .glow-orb.orb1 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent);
+            top: -100px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+        .bg-effects .glow-orb.orb2 {
+            width: 300px;
+            height: 300px;
+            background: #0044ff;
+            bottom: -50px;
+            left: -50px;
+            animation-delay: -5s;
+            opacity: 0.04;
+        }
+        .bg-effects .glow-orb.orb3 {
+            width: 250px;
+            height: 250px;
+            background: #ff0044;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+            opacity: 0.03;
+        }
+
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -40px) scale(1.1); }
+            66% { transform: translate(-20px, 30px) scale(0.9); }
+            100% { transform: translate(10px, -20px) scale(1.05); }
+        }
+
+        .scan-line {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(26, 122, 90, 0.02) 2px,
+                rgba(26, 122, 90, 0.02) 4px
+            );
+        }
+
+        [data-theme="dark"] .scan-line {
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(68, 221, 170, 0.01) 2px,
+                rgba(68, 221, 170, 0.01) 4px
+            );
+        }
+
+        /* ─── CONTAINER ─── */
+        .container {
+            max-width: 820px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ─── TOP BAR ─── */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 14px 22px;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px var(--shadow-color);
+            transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 600;
+            background: var(--accent-dim);
+            padding: 5px 16px 5px 12px;
+            border-radius: 40px;
+            border: 1px solid rgba(26, 122, 90, 0.1);
+            font-family: var(--font-mono);
+            letter-spacing: 0.5px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        .status-badge .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulseDot 1.5s infinite;
+            box-shadow: 0 0 20px var(--accent-glow);
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+        @keyframes pulseDot {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .theme-toggle {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.2s;
+            font-family: var(--font-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .theme-toggle:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+        .theme-toggle .label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .lang-toggle button {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+            font-family: var(--font-main);
+            font-weight: 500;
+        }
+        .lang-toggle button:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+        .lang-toggle {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-primary);
+            padding: 4px;
+            border-radius: 40px;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s ease, border 0.3s ease;
+        }
+        .lang-toggle button.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-color: rgba(26, 122, 90, 0.2);
+        }
+
+        /* ─── MAIN CARD ─── */
+        .main-card {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            padding: 40px 38px;
+            box-shadow: 0 8px 48px var(--shadow-color);
+            transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            animation: glowSlide 3s ease-in-out infinite;
+            transition: background 0.3s ease;
+        }
+        @keyframes glowSlide {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* ─── HEADER ─── */
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .header .hacker-tag {
+            display: inline-block;
+            background: var(--accent-dim);
+            color: var(--accent);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 16px;
+            border-radius: 40px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: 'Courier New', monospace;
+            border: 1px solid rgba(26, 122, 90, 0.1);
+            margin-bottom: 8px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            font-family: 'Courier New', monospace;
+            transition: color 0.3s ease;
+        }
+        .header h1 .highlight {
+            color: var(--accent);
+            text-shadow: 0 0 30px var(--accent-glow);
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+        .header .sub {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 4px;
+            font-family: 'Courier New', monospace;
+            transition: color 0.3s ease;
+        }
+        .header .sub span {
+            color: var(--accent);
+            transition: color 0.3s ease;
+        }
+
+        /* ─── INPUT SECTION ─── */
+        .input-section {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 4px;
+            border: 1px solid var(--border-color);
+            transition: border 0.3s ease, background 0.3s ease;
+            position: relative;
+        }
+        .input-group:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .input-group input {
+            flex: 2;
+            min-width: 180px;
+            background: transparent;
+            border: none;
+            padding: 14px 20px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: 'Courier New', monospace;
+            outline: none;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 1;
+            transition: color 0.3s ease;
+        }
+        .input-group input::placeholder {
+            color: var(--text-muted);
+            font-weight: 300;
+            opacity: 0.5;
+        }
+        .input-group input:focus {
+            color: var(--text-primary);
+        }
+
+        .input-group .placeholder-text {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 15px;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.5px;
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 0;
+            transition: color 0.3s ease;
+        }
+        .input-group input:focus + .placeholder-text,
+        .input-group input:not(:placeholder-shown) + .placeholder-text {
+            opacity: 0;
+        }
+
+        .input-group button {
+            flex: 1;
+            min-width: 120px;
+            background: linear-gradient(135deg, var(--accent), #00cc77);
+            border: none;
+            border-radius: 14px;
+            padding: 14px 24px;
+            font-weight: 700;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+        .input-group button:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+        .input-group button:disabled {
+            opacity: 0.35;
+            transform: none;
+            box-shadow: none;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+
+        /* ─── TERMINAL ─── */
+        .terminal-section {
+            margin: 16px 0 20px;
+        }
+
+        .terminal {
+            background: var(--terminal-bg);
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: inset 0 0 60px rgba(26, 122, 90, 0.02);
+            transition: border 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .terminal::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(26, 122, 90, 0.005) 2px,
+                rgba(26, 122, 90, 0.005) 4px
+            );
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        [data-theme="dark"] .terminal::before {
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(68, 221, 170, 0.005) 2px,
+                rgba(68, 221, 170, 0.005) 4px
+            );
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: rgba(0, 0, 0, 0.02);
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.3s ease, border 0.3s ease;
+        }
+        [data-theme="dark"] .terminal-header {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .terminal-header .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            transition: box-shadow 0.3s ease;
+        }
+        .terminal-header .dot.red { background: #ff4444; }
+        .terminal-header .dot.yellow { background: #ffbb44; }
+        .terminal-header .dot.green { 
+            background: #44dd44;
+            box-shadow: 0 0 20px rgba(68, 221, 68, 0.2);
+            animation: dotGreenPulse 2s ease-in-out infinite;
+        }
+        @keyframes dotGreenPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(68, 221, 68, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(68, 221, 68, 0.5); }
+        }
+        .terminal-header .title {
+            color: var(--text-muted);
+            font-size: 10px;
+            font-family: 'Courier New', monospace;
+            margin-left: 8px;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+        }
+
+        .terminal-body {
+            padding: 14px 18px;
+            min-height: 160px;
+            max-height: 280px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.8;
+            scroll-behavior: smooth;
+            position: relative;
+            z-index: 1;
+            transition: color 0.3s ease;
+        }
+        .terminal-body::-webkit-scrollbar {
+            width: 4px;
+        }
+        .terminal-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .terminal-body::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .terminal-body .line {
+            opacity: 0;
+            animation: typeIn 0.04s ease forwards;
+        }
+        .terminal-body .line.prompt {
+            color: var(--accent);
+            transition: color 0.3s ease;
+        }
+        .terminal-body .line.command {
+            color: var(--text-primary);
+            text-shadow: 0 0 20px rgba(255,255,255,0.05);
+            transition: color 0.3s ease;
+        }
+        .terminal-body .line.output {
+            color: var(--text-secondary);
+            padding-left: 16px;
+            transition: color 0.3s ease;
+        }
+        .terminal-body .line.output.success {
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent-glow);
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+        .terminal-body .line.output.error {
+            color: #ff4466;
+        }
+        .terminal-body .line.output .highlight {
+            color: var(--accent);
+            transition: color 0.3s ease;
+        }
+        .terminal-body .line.output .dim {
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+        .terminal-body .line .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: var(--accent);
+            animation: blink 0.8s infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+            box-shadow: 0 0 20px var(--accent-glow);
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        @keyframes typeIn {
+            0% { opacity: 0; transform: translateX(-4px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .terminal-body .glitch-text {
+            color: var(--accent);
+            text-shadow: 2px 0 #ff0044, -2px 0 #0044ff;
+            animation: glitchText 2s infinite;
+            transition: color 0.3s ease;
+        }
+        @keyframes glitchText {
+            0%, 100% { transform: skew(0deg); }
+            2% { transform: skew(2deg); }
+            4% { transform: skew(-2deg); }
+            6% { transform: skew(0deg); }
+        }
+
+        .terminal-body .progress-bar-term {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-left: 16px;
+            color: var(--text-muted);
+            font-size: 11px;
+            transition: color 0.3s ease;
+        }
+        .terminal-body .progress-bar-term .pbar {
+            flex: 1;
+            height: 4px;
+            background: rgba(0,0,0,0.06);
+            border-radius: 10px;
+            overflow: hidden;
+            max-width: 200px;
+            transition: background 0.3s ease;
+        }
+        [data-theme="dark"] .terminal-body .progress-bar-term .pbar {
+            background: rgba(255,255,255,0.06);
+        }
+        .terminal-body .progress-bar-term .pbar .pfill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), #44ffbb);
+            border-radius: 10px;
+            transition: width 0.3s ease, background 0.3s ease;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .terminal-body .ascii-art {
+            color: var(--text-muted);
+            font-size: 9px;
+            line-height: 1.2;
+            white-space: pre;
+            opacity: 0.3;
+            padding-left: 16px;
+            font-family: 'Courier New', monospace;
+            transition: color 0.3s ease;
+        }
+
+        /* ─── PROGRESS ─── */
+        .progress-track {
+            width: 100%;
+            height: 3px;
+            background: rgba(0,0,0,0.04);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 4px 0 8px;
+            transition: background 0.3s ease;
+        }
+        [data-theme="dark"] .progress-track {
+            background: rgba(255,255,255,0.04);
+        }
+        .progress-track .bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), #44ffbb, var(--accent));
+            border-radius: 10px;
+            transition: width 0.2s ease, background 0.3s ease;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        /* ─── CREDIT & WHATSAPP CREDIT BUTTON ─── */
+        .credit-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 8px 0 12px;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 12px;
+            transition: border 0.3s ease;
+        }
+        .credit-bar .credit-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .credit-bar .credit-left .btn-credit-left {
+            background: rgba(26, 122, 90, 0.08);
+            color: var(--accent);
+            border: 1px solid rgba(26, 122, 90, 0.15) !important;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        .credit-bar .credit-left .btn-credit-left:hover {
+            background: rgba(26, 122, 90, 0.15);
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+        .credit-bar .credit-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            transition: color 0.3s ease;
+        }
+        .credit-bar .credit-right .credit-icon {
+            font-size: 16px;
+        }
+        .credit-bar .credit-right .credit-amount {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+        .credit-bar .credit-right .credit-status {
+            font-size: 10px;
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: background 0.3s ease, color 0.3s ease, border 0.3s ease;
+        }
+        .credit-bar .credit-right .credit-status.insufficient {
+            color: var(--credit-insufficient);
+            background: rgba(255, 68, 102, 0.08);
+            border: 1px solid rgba(255, 68, 102, 0.15);
+        }
+        .credit-bar .credit-right .credit-status.low {
+            color: var(--credit-low);
+            background: rgba(255, 68, 102, 0.08);
+            border: 1px solid rgba(255, 68, 102, 0.15);
+        }
+        .credit-bar .credit-right .credit-status.ready {
+            color: var(--credit-ready);
+            background: var(--accent-dim);
+            border: 1px solid rgba(26, 122, 90, 0.15);
+        }
+
+        /* ─── SCANNING ANIMATION ─── */
+        .scanning-dots {
+            display: inline-flex;
+            gap: 3px;
+            margin-left: 4px;
+        }
+        .scanning-dots .dot {
+            width: 5px;
+            height: 5px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: dotMove 1.2s ease-in-out infinite;
+            transition: background 0.3s ease;
+        }
+        .scanning-dots .dot:nth-child(1) { animation-delay: 0s; }
+        .scanning-dots .dot:nth-child(2) { animation-delay: 0.2s; }
+        .scanning-dots .dot:nth-child(3) { animation-delay: 0.4s; }
+        .scanning-dots .dot:nth-child(4) { animation-delay: 0.6s; }
+
+        @keyframes dotMove {
+            0%, 100% { transform: translateY(0); opacity: 0.3; }
+            50% { transform: translateY(-6px); opacity: 1; }
+        }
+
+        /* ─── LOADING DOTS ANIMATION ─── */
+        .loading-dots {
+            display: inline-flex;
+            gap: 2px;
+            margin-left: 2px;
+        }
+        .loading-dots .ldot {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: loadDot 1.4s ease-in-out infinite;
+            transition: background 0.3s ease;
+        }
+        .loading-dots .ldot:nth-child(1) { animation-delay: 0s; }
+        .loading-dots .ldot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots .ldot:nth-child(3) { animation-delay: 0.4s; }
+        .loading-dots .ldot:nth-child(4) { animation-delay: 0.6s; }
+
+        @keyframes loadDot {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+            40% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* ─── REPORT CARD ─── */
+        #reportCard {
+            background: var(--bg-primary);
+            border-radius: 18px;
+            border: 1px solid var(--border-color);
+            padding: 26px 28px;
+            margin-top: 22px;
+            display: none;
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.03);
+            transition: border 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+        }
+        [data-theme="dark"] #reportCard {
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.3);
+        }
+        #reportCard.visible {
+            display: block;
+            animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateY(30px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 10px;
+            text-align: center;
+            transition: border 0.3s ease;
+        }
+        .report-header .left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        .report-header .left .whatsapp-icon {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 4px;
+        }
+        .report-header .left .whatsapp-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #25D366;
+        }
+        .report-header .left .report-title-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .report-header .left .report-title-group h2 {
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+        }
+        .report-header .left .report-title-group .target-number {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 400;
+            font-family: 'Courier New', monospace;
+            transition: color 0.3s ease;
+        }
+        .report-header .center {
+            text-align: center;
+            flex: 1;
+        }
+        .report-header .center .trust-label {
+            color: var(--text-muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            transition: color 0.3s ease;
+        }
+        .report-header .center .trust {
+            font-size: 28px;
+            font-weight: 900;
+            font-family: 'Courier New', monospace;
+            color: #ff8844;
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
+        }
+        .report-header .center .trust.scanned {
+            color: var(--accent);
+            transition: color 0.3s ease;
+        }
+        .report-header .right {
+            text-align: center;
+            flex: 1;
+        }
+        .report-header .right .scan-label {
+            color: var(--text-muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            transition: color 0.3s ease;
+        }
+        .report-header .right .scan-status {
+            color: var(--accent);
+            font-size: 28px;
+            font-weight: 900;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
+        }
+        .report-header .right .scan-status.scanning {
+            color: #ff8844;
+        }
+
+        /* ─── STATS WITH BLUR ─── */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin: 14px 0;
+        }
+        .stat-item {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 12px 14px;
+            border: 1px solid var(--border-color);
+            transition: 0.2s, background 0.3s ease, border 0.3s ease;
+        }
+        .stat-item:hover {
+            border-color: var(--accent);
+        }
+        .stat-item .label {
+            color: var(--text-muted);
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            transition: color 0.3s ease;
+        }
+        .stat-item .value {
+            color: var(--text-primary);
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Courier New', monospace;
+            filter: blur(5px);
+            -webkit-filter: blur(5px);
+            user-select: none;
+            transition: color 0.3s ease;
+        }
+        .stat-item .value .sub {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--text-muted);
+            filter: blur(5px);
+            -webkit-filter: blur(5px);
+            transition: color 0.3s ease;
+        }
+        .stat-item .value .danger {
+            color: #ff4466;
+            filter: blur(5px);
+            -webkit-filter: blur(5px);
+        }
+        .stat-item .value .warning {
+            color: #ffbb44;
+            filter: blur(5px);
+            -webkit-filter: blur(5px);
+        }
+        .stat-item .value .success {
+            color: var(--accent);
+            filter: blur(5px);
+            -webkit-filter: blur(5px);
+            transition: color 0.3s ease;
+        }
+
+        .evidence-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 12px 0 14px;
+        }
+        .evidence-box {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s ease, border 0.3s ease;
+        }
+        .evidence-box .eb-label {
+            color: var(--text-muted);
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.3s ease;
+        }
+        .evidence-box .eb-value {
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 4px;
+            font-family: 'Courier New', monospace;
+            filter: blur(6px);
+            -webkit-filter: blur(6px);
+            user-select: none;
+            transition: color 0.3s ease;
+        }
+        .evidence-box .eb-value .highlight {
+            color: var(--accent);
+            filter: blur(6px);
+            -webkit-filter: blur(6px);
+            transition: color 0.3s ease;
+        }
+
+        .timeline {
+            margin: 12px 0 16px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s ease, border 0.3s ease;
+        }
+        .timeline .tl-label {
+            color: var(--text-muted);
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 6px;
+            transition: color 0.3s ease;
+        }
+        .timeline .tl-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.02);
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            transition: border 0.3s ease;
+        }
+        [data-theme="dark"] .timeline .tl-item {
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+        .timeline .tl-item:last-child {
+            border-bottom: none;
+        }
+        .timeline .tl-item .tl-time {
+            color: var(--text-muted);
+            font-weight: 300;
+            filter: blur(3px);
+            -webkit-filter: blur(3px);
+            user-select: none;
+            transition: color 0.3s ease;
+        }
+        .timeline .tl-item .tl-msg {
+            color: var(--text-secondary);
+            filter: blur(3px);
+            -webkit-filter: blur(3px);
+            user-select: none;
+            transition: color 0.3s ease;
+        }
+        .timeline .tl-item .tl-msg .flag {
+            color: #ff4466;
+            font-weight: 600;
+            filter: blur(3px);
+            -webkit-filter: blur(3px);
+        }
+
+        /* ─── PREMIUM ACTION BUTTONS ─── */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .action-buttons button {
+            flex: 1;
+            min-width: 100px;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            border: none;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .action-buttons button::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent);
+            pointer-events: none;
+        }
+        .btn-reset {
+            background: var(--bg-card);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color) !important;
+            transition: background 0.3s ease, color 0.3s ease, border 0.3s ease;
+        }
+        .btn-reset:hover {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            border-color: var(--text-muted) !important;
+        }
+        .btn-download {
+            background: linear-gradient(135deg, var(--accent), #00cc77);
+            color: #fff;
+        }
+        .btn-download .lock-icon {
+            font-size: 18px;
+        }
+        .btn-download:hover:not(:disabled) {
+            transform: scale(1.03);
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+        .btn-download:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ─── CUSTOM ALERT STYLES ─── */
+        .custom-alert {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease;
+        }
+        [data-theme="light"] .custom-alert {
+            background: rgba(0, 0, 0, 0.5);
+        }
+        .custom-alert .alert-box {
+            background: var(--custom-alert-bg);
+            border: 1px solid var(--custom-alert-border);
+            border-radius: 20px;
+            padding: 40px 45px;
+            max-width: 440px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px var(--shadow-color);
+            animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+        }
+        .custom-alert .alert-box .alert-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .custom-alert .alert-box .alert-title {
+            color: var(--custom-alert-text);
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            margin-bottom: 6px;
+            transition: color 0.3s ease;
+        }
+        .custom-alert .alert-box .alert-sub {
+            color: #ff4466;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .custom-alert .alert-box .alert-msg {
+            color: var(--custom-alert-text);
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            white-space: pre-line;
+            transition: color 0.3s ease;
+        }
+        .custom-alert .alert-box .alert-btn {
+            background: linear-gradient(135deg, var(--accent), #00cc77);
+            border: none;
+            border-radius: 40px;
+            padding: 12px 32px;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .custom-alert .alert-box .alert-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+        .custom-alert .alert-box .alert-btn .btn-lock {
+            font-size: 16px;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateY(30px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 640px) {
+            .container { padding: 0; }
+            .main-card { padding: 24px 16px; border-radius: 18px; }
+            .header h1 { font-size: 24px; }
+            .stat-grid { grid-template-columns: 1fr 1fr; }
+            .evidence-row { grid-template-columns: 1fr; }
+            .input-group input { padding: 12px 16px; font-size: 14px; }
+            .input-group button { 
+                padding: 12px 16px; 
+                font-size: 12px; 
+                min-width: 100px;
+            }
+            .report-header { flex-direction: column; align-items: center; gap: 8px; }
+            .report-header .left { justify-content: center; }
+            .report-header .center { text-align: center; }
+            .report-header .right { text-align: center; }
+            .top-bar { flex-direction: column; align-items: stretch; padding: 12px 16px; }
+            .top-bar-left { justify-content: center; }
+            .top-bar-right { justify-content: center; }
+            .terminal-body { min-height: 120px; max-height: 200px; font-size: 11px; padding: 10px 14px; }
+            .credit-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+            .credit-bar .credit-left { justify-content: center; }
+            .credit-bar .credit-right { 
+                justify-content: center;
+                font-size: 17px !important;
+                font-weight: 800 !important;
+            }
+            .credit-bar .credit-right .credit-amount {
+                font-size: 22px !important;
+                font-weight: 900 !important;
+            }
+            .credit-bar .credit-right .credit-status {
+                font-size: 14px !important;
+                font-weight: 800 !important;
+                padding: 4px 18px;
+            }
+            .action-buttons button { 
+                padding: 12px 16px; 
+                font-size: 13px !important; 
+                font-weight: 700 !important;
+                min-width: 80px;
+            }
+            .btn-download .lock-icon {
+                font-size: 20px !important;
+            }
+            
+            .stat-item .label {
+                font-size: 11px !important;
+                font-weight: 700 !important;
+            }
+            .evidence-box .eb-label {
+                font-size: 11px !important;
+                font-weight: 700 !important;
+            }
+            .timeline .tl-label {
+                font-size: 11px !important;
+                font-weight: 700 !important;
+            }
+            .credit-bar .credit-left .btn-credit-left {
+                font-size: 12px !important;
+                font-weight: 700 !important;
+                padding: 10px 18px !important;
+            }
+            
+            .report-header .center .trust { font-size: 22px; font-weight: 900; }
+            .report-header .right .scan-status { font-size: 22px; font-weight: 900; }
+            .report-header .left .report-title-group h2 { font-weight: 800; }
+            .report-header .left .report-title-group .target-number { font-weight: 600; }
+            .input-group .placeholder-text { font-size: 13px; left: 16px; }
+            .custom-alert .alert-box { padding: 30px 24px; }
+            .custom-alert .alert-box .alert-title { font-size: 18px; }
+            .custom-alert .alert-box .alert-sub { font-size: 12px; }
+            .custom-alert .alert-box .alert-msg { font-size: 13px; }
+            .custom-alert .alert-box .alert-btn { font-size: 12px; padding: 10px 24px; }
+        }
+        @media (max-width: 400px) {
+            .stat-grid { grid-template-columns: 1fr; }
+            .action-buttons button { 
+                min-width: 70px; 
+                font-size: 12px !important; 
+                font-weight: 700 !important;
+                padding: 10px 14px !important;
+            }
+            .btn-download .lock-icon {
+                font-size: 18px !important;
+            }
+            .main-card { padding: 18px 12px; }
+            .report-header .center .trust { font-size: 18px; font-weight: 900; }
+            .report-header .right .scan-status { font-size: 18px; font-weight: 900; }
+            
+            .stat-item .label {
+                font-size: 10px !important;
+                font-weight: 700 !important;
+            }
+            .evidence-box .eb-label {
+                font-size: 10px !important;
+                font-weight: 700 !important;
+            }
+            .timeline .tl-label {
+                font-size: 10px !important;
+                font-weight: 700 !important;
+            }
+            
+            .credit-bar .credit-right { 
+                font-size: 15px !important; 
+                font-weight: 800 !important; 
+            }
+            .credit-bar .credit-right .credit-amount { 
+                font-size: 18px !important; 
+                font-weight: 900 !important; 
+            }
+            .credit-bar .credit-right .credit-status { 
+                font-size: 12px !important; 
+                font-weight: 800 !important; 
+                padding: 3px 12px;
+            }
+            .credit-bar .credit-left .btn-credit-left { 
+                font-size: 11px !important; 
+                font-weight: 700 !important;
+                padding: 8px 14px !important;
+            }
+            .input-group .placeholder-text { font-size: 11px; left: 12px; }
+            .input-group button { padding: 10px 12px; font-size: 10px; min-width: 80px; }
+            .custom-alert .alert-box { padding: 24px 18px; }
+            .custom-alert .alert-box .alert-title { font-size: 16px; }
+            .custom-alert .alert-box .alert-sub { font-size: 11px; }
+            .custom-alert .alert-box .alert-msg { font-size: 12px; }
+            .custom-alert .alert-box .alert-btn { font-size: 11px; padding: 8px 18px; }
+            .custom-alert .alert-box .alert-btn .btn-lock { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ─── BACKGROUND EFFECTS ─── -->
+    <div class="bg-effects">
+        <div class="grid-lines"></div>
+        <div class="glow-orb orb1"></div>
+        <div class="glow-orb orb2"></div>
+        <div class="glow-orb orb3"></div>
+    </div>
+    <div class="scan-line"></div>
+
+    <div class="container">
+
+        <!-- TOP BAR -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <div class="status-badge">
+                    <span class="dot"></span>
+                    <span id="statusText">● SISTEMA ACTIVO</span>
+                </div>
+            </div>
+            <div class="top-bar-right">
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+                    <span id="themeIcon">🌙</span>
+                    <span class="label" id="themeLabel">Dark</span>
+                </button>
+                <div class="lang-toggle">
+                    <button class="active" data-lang="en" onclick="setLang('en')">EN</button>
+                    <button data-lang="es" onclick="setLang('es')">ES</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CARD -->
+        <div class="main-card">
+
+            <!-- HEADER -->
+            <div class="header">
+                <div class="hacker-tag" id="hackerTag">⚡ v5.0 · ENCRYPTED</div>
+                <h1>WhatsApp <span class="highlight" id="headerTitle">Scanner</span></h1>
+                <div class="sub"><span id="statsCount">2.4M</span> <span id="statsLabel">accounts scanned</span> · <span id="statsReal">Real-time</span> <span id="statsDecrypt">decryption</span></div>
+            </div>
+
+            <!-- INPUT -->
+            <div class="input-section">
+                <div class="input-group">
+                    <input type="text" id="phoneInput" placeholder=" " value="" />
+                    <span class="placeholder-text" id="placeholderText">WhatsApp number here</span>
+                    <button id="scanBtn">▶ SCAN</button>
+                </div>
+            </div>
+
+            <!-- TERMINAL -->
+            <div class="terminal-section">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="title" id="terminalTitle">root@hacker:~$ ./scan — HACKING SEQUENCE</span>
+                    </div>
+                    <div class="terminal-body" id="terminalBody">
+                        <!-- filled by JS -->
+                    </div>
+                    <div class="progress-track">
+                        <div class="bar" id="progressBar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CREDIT BAR -->
+            <div class="credit-bar">
+                <div class="credit-left">
+                    <button class="btn-credit-left" id="creditBtn">🪙 WhatsApp Credit</button>
+                </div>
+                <div class="credit-right">
+                    <span class="credit-icon">🪙</span>
+                    <span id="creditLabel">WhatsApp Credits:</span>
+                    <span class="credit-amount" id="creditDisplay">0</span>
+                    <span class="credit-status" id="creditStatus">INSUFFICIENT</span>
+                </div>
+            </div>
+
+            <!-- REPORT CARD -->
+            <div id="reportCard">
+
+                <div class="report-header">
+                    <div class="left">
+                        <span class="whatsapp-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                            </svg>
+                        </span>
+                        <div class="report-title-group">
+                            <h2 id="reportTitle">📋 SCAN REPORT</h2>
+                            <div class="target-number" id="targetDisplay">—</div>
+                        </div>
+                    </div>
+                    <div class="center">
+                        <div class="trust-label" id="trustLabel">HACKING...</div>
+                        <div class="trust scanning" id="trustScore">0%</div>
+                    </div>
+                    <div class="right">
+                        <div class="scan-label" id="scanLabel">SCANNED</div>
+                        <div class="scan-status scanning" id="scanStatus">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="label" id="labelFreq">🔴 Frequent Contact</div>
+                        <div class="value" id="freqName">—</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label" id="labelMsgs">💬 Msgs / day</div>
+                        <div class="value" id="msgCount">—</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label" id="labelDeleted">🗑️ Deleted</div>
+                        <div class="value"><span class="danger" id="deletedCount">—</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label" id="labelMedia">📸 Media Shared</div>
+                        <div class="value" id="mediaCount">—</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label" id="labelHours">⏰ Active Hours</div>
+                        <div class="value" id="activeHours">—</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label" id="labelDevices">📱 Devices Linked</div>
+                        <div class="value" id="devicesLinked">—</div>
+                    </div>
+                </div>
+
+                <div class="evidence-row">
+                    <div class="evidence-box">
+                        <div class="eb-label" id="labelLocation">📍 Last Known Location</div>
+                        <div class="eb-value" id="locationText">—</div>
+                    </div>
+                    <div class="evidence-box">
+                        <div class="eb-label" id="labelVoice">🎙️ Voice Note Transcript</div>
+                        <div class="eb-value" id="voiceText">"—"</div>
+                    </div>
+                </div>
+
+                <div class="timeline">
+                    <div class="tl-label" id="timelineLabel">⏳ Recent Activity Timeline</div>
+                    <div id="timelineContainer">
+                        <div class="tl-item">
+                            <span class="tl-time">Today, 2:41 PM</span>
+                            <span class="tl-msg">📤 Sent 3 images to <span class="flag" id="tlName1">—</span></span>
+                        </div>
+                        <div class="tl-item">
+                            <span class="tl-time">Today, 1:12 PM</span>
+                            <span class="tl-msg">🗑️ Deleted 12 messages</span>
+                        </div>
+                        <div class="tl-item">
+                            <span class="tl-time">Today, 11:04 AM</span>
+                            <span class="tl-msg">📍 Location shared with <span class="flag" id="tlName2">—</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-reset" id="resetBtn">⟳ New Scan</button>
+                    <button class="btn-download" id="downloadBtn">
+                        <span class="lock-icon">🔓</span> Download Proof
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // ─── Get URL params ───
+            function getURLParams() {
+                const params = new URLSearchParams(window.location.search);
+                return {
+                    lang: params.get('lang') || 'es',
+                    credit: parseInt(params.get('credit')) || 0,
+                    amount: parseInt(params.get('amount')) || 20,
+                    download: parseInt(params.get('download')) || 380,
+                    theme: params.get('theme') || 'light'
+                };
+            }
+
+            // ─── Theme toggle ───
+            function toggleTheme() {
+                const html = document.documentElement;
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', newTheme);
+                updateThemeUI(newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateURL();
+            }
+
+            function updateThemeUI(theme) {
+                const icon = document.getElementById('themeIcon');
+                const label = document.getElementById('themeLabel');
+                if (theme === 'dark') {
+                    icon.textContent = '☀️';
+                    label.textContent = 'Light';
+                } else {
+                    icon.textContent = '🌙';
+                    label.textContent = 'Dark';
+                }
+            }
+
+            function loadTheme() {
+                const saved = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', saved);
+                updateThemeUI(saved);
+                return saved;
+            }
+
+            // ─── TRANSLATIONS ───
+            const TRANSLATIONS = {
+                en: {
+                    status: '● SYSTEM ACTIVE',
+                    hackerTag: '⚡ v5.0 · ENCRYPTED',
+                    headerTitle: 'Scanner',
+                    statsLabel: 'accounts scanned',
+                    statsReal: 'Real-time',
+                    statsDecrypt: 'decryption',
+                    scanBtn: '▶ SCAN',
+                    placeholderText: 'WhatsApp number here',
+                    creditLabel: 'WhatsApp Credits:',
+                    creditBtn: '🪙 WhatsApp Credit',
+                    trustLabel: 'HACKING...',
+                    trustScanned: 'HACKED ✓',
+                    scanLabel: 'SCANNED',
+                    reportTitle: '📋 SCAN REPORT',
+                    labelFreq: '🔴 Frequent Contact',
+                    labelMsgs: '💬 Msgs / day',
+                    labelDeleted: '🗑️ Deleted',
+                    labelMedia: '📸 Media Shared',
+                    labelHours: '⏰ Active Hours',
+                    labelDevices: '📱 Devices Linked',
+                    labelLocation: '📍 Last Known Location',
+                    labelVoice: '🎙️ Voice Note Transcript',
+                    timelineLabel: '⏳ Recent Activity Timeline',
+                    resetBtn: '⟳ New Scan',
+                    downloadBtn: 'Download Proof',
+                    creditTitle: '🪙 Purchase WhatsApp Credit',
+                    creditMsg: 'Purchase {amount} WhatsApp Credits to complete hacking.',
+                    downloadLockTitle: 'WhatsApp Hacked',
+                    downloadLockSub: 'Proof unlocked. Need {download} credits to export or view chat and messages.',
+                    downloadLockMsg: 'This evidence is locked and secured.',
+                    proceedBtn: 'Proceed',
+                    noCreditTitle: '❌ Hacking Not Completed',
+                    noCreditMsg: 'Purchase {amount} WhatsApp Credits to complete hacking...',
+                    downloaded: 'scan_report',
+                    terminalTitle: 'root@hacker:~$ ./scan — HACKING SEQUENCE',
+                    creditStatusInsufficient: 'INSUFFICIENT',
+                    creditStatusLow: 'LOW CREDIT',
+                    creditStatusReady: 'READY TO HACK',
+                    creditBtnMsg: 'Purchase more credits to unlock full hacking power!',
+                    terminalLines: {
+                        init: './init --target whatsapp --mode stealth',
+                        initMsg: '[●] Initializing scanning sequence...',
+                        bypass: '[●] Bypassing E2E encryption...',
+                        clone: '[●] Cloning multi-device sessions...',
+                        success: '[✓] Target compromised. Access granted.',
+                        scan: './scan --platform all',
+                        scanMsg: '[●] Scanning 6 platforms...',
+                        extracting: '[●] Extracting message history...',
+                        decrypting: '[●] Decrypting media files...',
+                        analyzing: '[●] Analyzing contact patterns...',
+                        recovering: '[●] Recovering deleted messages...',
+                        location: '[●] Extracting location data...',
+                        generating: '[●] Generating scan report...',
+                        complete: '[✓] Scan complete. {number} analysed.',
+                        report: '[✓] Scan report generated.'
+                    }
+                },
+                es: {
+                    status: '● SISTEMA ACTIVO',
+                    hackerTag: '⚡ v5.0 · ENCRIPTADO',
+                    headerTitle: 'Escáner',
+                    statsLabel: 'cuentas escaneadas',
+                    statsReal: 'Tiempo real',
+                    statsDecrypt: 'descifrado',
+                    scanBtn: '▶ ESCANEAR',
+                    placeholderText: 'Número de WhatsApp aquí',
+                    creditLabel: 'Créditos WhatsApp:',
+                    creditBtn: '🪙 Crédito WhatsApp',
+                    trustLabel: 'HACKEANDO...',
+                    trustScanned: 'HACKEADO ✓',
+                    scanLabel: 'ESCANEADO',
+                    reportTitle: '📋 INFORME DE ESCANEO',
+                    labelFreq: '🔴 Contacto Frecuente',
+                    labelMsgs: '💬 Mensajes / día',
+                    labelDeleted: '🗑️ Eliminados',
+                    labelMedia: '📸 Archivos Compartidos',
+                    labelHours: '⏰ Horas Activas',
+                    labelDevices: '📱 Dispositivos Vinculados',
+                    labelLocation: '📍 Última Ubicación',
+                    labelVoice: '🎙️ Transcripción de Nota de Voz',
+                    timelineLabel: '⏳ Actividad Reciente',
+                    resetBtn: '⟳ Nuevo Escaneo',
+                    downloadBtn: 'Descargar Informe',
+                    creditTitle: '🪙 Comprar Crédito WhatsApp',
+                    creditMsg: 'Compra {amount} Créditos WhatsApp para completar el hackeo.',
+                    downloadLockTitle: 'WhatsApp Hackeado',
+                    downloadLockSub: 'Prueba desbloqueada. Necesitas {download} créditos para exportar o ver el chat y mensajes.',
+                    downloadLockMsg: 'Esta evidencia está bloqueada y asegurada.',
+                    proceedBtn: 'Proceder',
+                    noCreditTitle: '❌ Hackeo No Completado',
+                    noCreditMsg: 'Compra {amount} Créditos WhatsApp para completar el hackeo...',
+                    downloaded: 'informe_escaneo',
+                    terminalTitle: 'root@hacker:~$ ./scan — SECUENCIA DE HACKEO',
+                    creditStatusInsufficient: 'INSUFICIENTE',
+                    creditStatusLow: 'CRÉDITO BAJO',
+                    creditStatusReady: 'LISTO PARA HACKEAR',
+                    creditBtnMsg: '¡Compra más créditos para desbloquear todo el poder de hacking!',
+                    terminalLines: {
+                        init: './init --target whatsapp --mode stealth',
+                        initMsg: '[●] Inicializando secuencia de escaneo...',
+                        bypass: '[●] Eludiendo cifrado E2E...',
+                        clone: '[●] Clonando sesiones multi-dispositivo...',
+                        success: '[✓] Objetivo comprometido. Acceso concedido.',
+                        scan: './scan --platform all',
+                        scanMsg: '[●] Escaneando 6 plataformas...',
+                        extracting: '[●] Extrayendo historial de mensajes...',
+                        decrypting: '[●] Descifrando archivos multimedia...',
+                        analyzing: '[●] Analizando patrones de contacto...',
+                        recovering: '[●] Recuperando mensajes eliminados...',
+                        location: '[●] Extrayendo datos de ubicación...',
+                        generating: '[●] Generando informe de escaneo...',
+                        complete: '[✓] Escaneo completado. {number} analizado.',
+                        report: '[✓] Informe de escaneo generado.'
+                    }
+                }
+            };
+
+            // ─── DOM refs ───
+            const phoneInput = document.getElementById('phoneInput');
+            const placeholderText = document.getElementById('placeholderText');
+            const scanBtn = document.getElementById('scanBtn');
+            const progressBar = document.getElementById('progressBar');
+            const terminalBody = document.getElementById('terminalBody');
+            const creditDisplay = document.getElementById('creditDisplay');
+            const creditStatus = document.getElementById('creditStatus');
+
+            const reportCard = document.getElementById('reportCard');
+            const targetDisplay = document.getElementById('targetDisplay');
+            const trustScore = document.getElementById('trustScore');
+            const trustLabel = document.getElementById('trustLabel');
+            const scanStatus = document.getElementById('scanStatus');
+            const scanLabel = document.getElementById('scanLabel');
+            const freqName = document.getElementById('freqName');
+            const msgCount = document.getElementById('msgCount');
+            const deletedCount = document.getElementById('deletedCount');
+            const mediaCount = document.getElementById('mediaCount');
+            const activeHours = document.getElementById('activeHours');
+            const devicesLinked = document.getElementById('devicesLinked');
+            const locationText = document.getElementById('locationText');
+            const voiceText = document.getElementById('voiceText');
+            const tlName1 = document.getElementById('tlName1');
+            const tlName2 = document.getElementById('tlName2');
+
+            const downloadBtn = document.getElementById('downloadBtn');
+            const creditBtn = document.getElementById('creditBtn');
+            const resetBtn = document.getElementById('resetBtn');
+
+            const statusText = document.getElementById('statusText');
+            const hackerTag = document.getElementById('hackerTag');
+            const headerTitle = document.getElementById('headerTitle');
+            const statsLabel = document.getElementById('statsLabel');
+            const statsReal = document.getElementById('statsReal');
+            const statsDecrypt = document.getElementById('statsDecrypt');
+            const creditLabel = document.getElementById('creditLabel');
+            const reportTitle = document.getElementById('reportTitle');
+            const timelineLabel = document.getElementById('timelineLabel');
+            const terminalTitle = document.getElementById('terminalTitle');
+
+            // Stat labels
+            const labelFreq = document.getElementById('labelFreq');
+            const labelMsgs = document.getElementById('labelMsgs');
+            const labelDeleted = document.getElementById('labelDeleted');
+            const labelMedia = document.getElementById('labelMedia');
+            const labelHours = document.getElementById('labelHours');
+            const labelDevices = document.getElementById('labelDevices');
+            const labelLocation = document.getElementById('labelLocation');
+            const labelVoice = document.getElementById('labelVoice');
+
+            // ─── State ───
+            let currentLang = 'es';
+            let currentCredits = 0;
+            let currentAmount = 20;
+            let currentDownload = 380;
+            let scanTimer = null;
+            let hasReport = false;
+
+            // ─── Data pools ───
+            const firstNames = ['Jessica', 'Mike', 'Amanda', 'Chris', 'Stephanie', 'Jake', 'Rachel', 'Tyler', 'Megan', 'Derek',
+                'Olivia', 'Ethan', 'Sophia', 'Liam', 'Ava', 'Noah', 'Isabella', 'Mason'
+            ];
+            const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Martinez',
+                'Hernandez', 'Lopez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore'
+            ];
+            const locations = [
+                'The Ritz Hotel, Downtown',
+                'Hilton Garden Inn, 5th Ave',
+                'Late-night diner, Main St',
+                'Parking garage, River Rd',
+                'Airbnb, Lakeview Drive',
+                'Rooftop bar, Financial District',
+                'Motel 6, Highway 9',
+                'Coffee shop, Oak St',
+                'Park, Central Ave'
+            ];
+            const voiceLines = [
+                '"I can\'t wait to see you tonight ;)"',
+                '"He has no idea. See you at 8."',
+                '"Babe, just booked the room. Send me that pic again."',
+                '"My partner is working late. Come over."',
+                '"Did you delete the chat? Good."',
+                '"I miss you so much. This has to stay secret."',
+                '"Tonight is finally happening. Just us."',
+                '"She can never find out about us."'
+            ];
+            const activeHoursOptions = ['11PM – 3AM', '12AM – 4AM', '1AM – 5AM', '10PM – 2AM'];
+            const deviceOptions = ['2 devices', '3 devices', '4 devices', '1 device + Web'];
+
+            // ─── Helper functions ───
+            function randomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+            function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+            function getLang() { return currentLang; }
+
+            function getT() { return TRANSLATIONS[currentLang] || TRANSLATIONS.es; }
+
+            // ─── Generate fake report ───
+            function generateReport() {
+                const name = randomItem(firstNames) + ' ' + randomItem(lastNames);
+                const nameShort = randomItem(firstNames);
+                const trust = randomInt(38, 86);
+                const msgs = randomInt(42, 145);
+                const deleted = randomInt(15, 89);
+                const media = randomInt(6, 42);
+                const hours = randomItem(activeHoursOptions);
+                const devices = randomItem(deviceOptions);
+                const loc = randomItem(locations);
+                const voice = randomItem(voiceLines);
+                return { name, nameShort, trust, msgs, deleted, media, hours, devices, loc, voice };
+            }
+
+            // ─── Update credit status ───
+            function updateCreditStatus() {
+                const t = getT();
+                const credits = currentCredits;
+
+                if (credits >= 21) {
+                    creditStatus.textContent = t.creditStatusReady;
+                    creditStatus.className = 'credit-status ready';
+                    scanBtn.disabled = false;
+                } else if (credits >= 1 && credits <= 20) {
+                    creditStatus.textContent = t.creditStatusLow;
+                    creditStatus.className = 'credit-status low';
+                    scanBtn.disabled = true;
+                } else {
+                    creditStatus.textContent = t.creditStatusInsufficient;
+                    creditStatus.className = 'credit-status insufficient';
+                    scanBtn.disabled = true;
+                }
+            }
+
+            // ─── Translate UI ───
+            function translateUI() {
+                const t = getT();
+                statusText.textContent = t.status;
+                hackerTag.textContent = t.hackerTag;
+                headerTitle.textContent = t.headerTitle;
+                statsLabel.textContent = t.statsLabel;
+                statsReal.textContent = t.statsReal;
+                statsDecrypt.textContent = t.statsDecrypt;
+                scanBtn.textContent = t.scanBtn;
+                placeholderText.textContent = t.placeholderText;
+                creditLabel.textContent = t.creditLabel;
+                creditBtn.textContent = t.creditBtn;
+                resetBtn.textContent = t.resetBtn;
+                reportTitle.textContent = t.reportTitle;
+                timelineLabel.textContent = t.timelineLabel;
+                terminalTitle.textContent = t.terminalTitle;
+                trustLabel.textContent = t.trustLabel;
+                scanLabel.textContent = t.scanLabel;
+
+                labelFreq.textContent = t.labelFreq;
+                labelMsgs.textContent = t.labelMsgs;
+                labelDeleted.textContent = t.labelDeleted;
+                labelMedia.textContent = t.labelMedia;
+                labelHours.textContent = t.labelHours;
+                labelDevices.textContent = t.labelDevices;
+                labelLocation.textContent = t.labelLocation;
+                labelVoice.textContent = t.labelVoice;
+
+                if (!hasReport) {
+                    trustScore.textContent = '0%';
+                    trustScore.className = 'trust scanning';
+                    scanStatus.textContent = '0';
+                    scanStatus.className = 'scan-status scanning';
+                }
+
+                downloadBtn.innerHTML = `<span class="lock-icon">🔓</span> ${t.downloadBtn}`;
+
+                updateCreditDisplay();
+                updateCreditStatus();
+            }
+
+            // ─── Update credit display ───
+            function updateCreditDisplay() {
+                creditDisplay.textContent = currentCredits;
+                updateCreditStatus();
+            }
+
+            // ─── Add terminal line ───
+            function addTerminalLine(text, type) {
+                const line = document.createElement('div');
+                line.className = 'line ' + (type || 'output');
+                if (type === 'prompt') {
+                    line.innerHTML = 'root@hacker:~$ <span class="command">' + text + '</span>';
+                } else {
+                    line.textContent = text;
+                }
+                terminalBody.appendChild(line);
+                terminalBody.scrollTop = terminalBody.scrollHeight;
+            }
+
+            // ─── Run scan ───
+            function runScan() {
+                const number = phoneInput.value.trim() || 'Unknown Number';
+                const t = getT();
+
+                if (scanTimer) { clearInterval(scanTimer);
+                    scanTimer = null; }
+                scanBtn.disabled = true;
+                reportCard.classList.remove('visible');
+                reportCard.style.display = 'none';
+                progressBar.style.width = '0%';
+                hasReport = false;
+
+                // Reset header
+                trustLabel.textContent = t.trustLabel;
+                trustScore.textContent = '0%';
+                trustScore.className = 'trust scanning';
+                scanStatus.textContent = '0';
+                scanStatus.className = 'scan-status scanning';
+                scanLabel.textContent = t.scanLabel;
+
+                terminalBody.innerHTML = '';
+
+                // ─── PREMIUM TERMINAL SEQUENCE ───
+                const lines = t.terminalLines;
+
+                // ASCII Art Header
+                const ascii = `
+    ╔═══════════════════════════════════════════════════════╗
+    ║  ██╗  ██╗ █████╗  ██████╗██╗  ██╗██╗███╗   ██╗ ██████╗
+    ║  ██║  ██║██╔══██╗██╔════╝██║ ██╔╝██║████╗  ██║██╔════╝
+    ║  ███████║███████║██║     █████╔╝ ██║██╔██╗ ██║██║  ███╗
+    ║  ██╔══██║██╔══██║██║     ██╔═██╗ ██║██║╚██╗██║██║   ██║
+    ║  ██║  ██║██║  ██║╚██████╗██║  ██╗██║██║ ╚████║╚██████╔╝
+    ║  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝
+    ╚═══════════════════════════════════════════════════════╝`;
+
+                const asciiLines = ascii.split('\n');
+                asciiLines.forEach(line => {
+                    if (line.trim()) {
+                        const el = document.createElement('div');
+                        el.className = 'line ascii-art';
+                        el.textContent = line;
+                        terminalBody.appendChild(el);
+                    }
+                });
+
+                // Initializing sequence
+                setTimeout(() => {
+                    addTerminalLine('', '');
+                    addTerminalLine('╔═══════════════════════════════════════════════════════╗', 'output');
+                    addTerminalLine('║  ███████  INITIALIZING HACKING SEQUENCE  ███████  ║', 'output success');
+                    addTerminalLine('╚═══════════════════════════════════════════════════════╝', 'output');
+                    addTerminalLine('');
+
+                    setTimeout(() => {
+                        addTerminalLine(lines.init, 'prompt');
+                        addTerminalLine(lines.initMsg);
+
+                        setTimeout(() => {
+                            addTerminalLine(lines.bypass);
+                            const pbarDiv = document.createElement('div');
+                            pbarDiv.className = 'line progress-bar-term';
+                            pbarDiv.innerHTML = `
+                                <span>E2E Bypass:</span>
+                                <span class="pbar"><span class="pfill" style="width: 100%;"></span></span>
+                                <span style="color:var(--accent);">✓</span>
+                            `;
+                            terminalBody.appendChild(pbarDiv);
+                            terminalBody.scrollTop = terminalBody.scrollHeight;
+
+                            setTimeout(() => {
+                                addTerminalLine(lines.clone);
+                                const pbarDiv2 = document.createElement('div');
+                                pbarDiv2.className = 'line progress-bar-term';
+                                pbarDiv2.innerHTML = `
+                                    <span>Session Clone:</span>
+                                    <span class="pbar"><span class="pfill" style="width: 100%;"></span></span>
+                                    <span style="color:var(--accent);">✓</span>
+                                `;
+                                terminalBody.appendChild(pbarDiv2);
+                                terminalBody.scrollTop = terminalBody.scrollHeight;
+
+                                setTimeout(() => {
+                                    addTerminalLine(lines.success, 'output success');
+                                    addTerminalLine('');
+
+                                    setTimeout(() => {
+                                        addTerminalLine(lines.scan, 'prompt');
+                                        addTerminalLine(lines.scanMsg);
+
+                                        let progress = 0;
+                                        let stepIndex = 0;
+                                        const steps = [
+                                            { p: 12, msg: lines.extracting },
+                                            { p: 28, msg: lines.decrypting },
+                                            { p: 45, msg: lines.analyzing },
+                                            { p: 62, msg: lines.recovering },
+                                            { p: 78, msg: lines.location },
+                                            { p: 92, msg: lines.generating },
+                                        ];
+
+                                        const pbarTerm = document.createElement('div');
+                                        pbarTerm.className = 'line progress-bar-term';
+                                        pbarTerm.id = 'termProgress';
+                                        pbarTerm.innerHTML = `
+                                            <span>Progress:</span>
+                                            <span class="pbar"><span class="pfill" id="termPfill" style="width: 0%;"></span></span>
+                                            <span id="termPerc" style="color:var(--accent);">0%</span>
+                                        `;
+                                        terminalBody.appendChild(pbarTerm);
+                                        terminalBody.scrollTop = terminalBody.scrollHeight;
+
+                                        scanTimer = setInterval(() => {
+                                            progress += randomInt(1, 4);
+                                            if (progress > 100) progress = 100;
+                                            progressBar.style.width = progress + '%';
+
+                                            const pfill = document.getElementById('termPfill');
+                                            const perc = document.getElementById('termPerc');
+                                            if (pfill) pfill.style.width = progress + '%';
+                                            if (perc) perc.textContent = progress + '%';
+
+                                            trustScore.textContent = progress + '%';
+                                            scanStatus.textContent = progress;
+
+                                            while (stepIndex < steps.length && progress >= steps[stepIndex].p) {
+                                                addTerminalLine(steps[stepIndex].msg);
+                                                stepIndex++;
+                                            }
+
+                                            if (progress >= 100) {
+                                                clearInterval(scanTimer);
+                                                scanTimer = null;
+                                                addTerminalLine(lines.complete.replace('{number}',
+                                                number), 'output success');
+                                                addTerminalLine(lines.report, 'output success');
+                                                scanBtn.disabled = false;
+
+                                                addTerminalLine('');
+                                                addTerminalLine('╔═══════════════════════════════════════════════════════╗',
+                                                    'output success');
+                                                addTerminalLine('║  ✓✓✓  HACK COMPLETE. REPORT GENERATED.  ✓✓✓  ║',
+                                                    'output success');
+                                                addTerminalLine('╚═══════════════════════════════════════════════════════╝',
+                                                    'output success');
+
+                                                const data = generateReport();
+                                                displayReport(data, number);
+
+                                                trustLabel.textContent = t.trustScanned;
+                                                trustScore.textContent = '100%';
+                                                trustScore.className = 'trust scanned';
+                                                scanStatus.textContent = '✓ DONE';
+                                                scanStatus.className = 'scan-status';
+
+                                                reportCard.style.display = 'block';
+                                                requestAnimationFrame(() => {
+                                                    reportCard.classList.add('visible');
+                                                });
+
+                                                window._lastReport = data;
+                                                window._lastNumber = number;
+                                                hasReport = true;
+
+                                                updateCreditDisplay();
+                                                updateCreditStatus();
+                                            }
+                                        }, 200);
+                                    }, 400);
+                                }, 400);
+                            }, 500);
+                        }, 500);
+                    }, 500);
+                }, 300);
+            }
+
+            // ─── Display report ───
+            function displayReport(data, phone) {
+                targetDisplay.textContent = '🔍 ' + phone;
+
+                freqName.textContent = data.name;
+                msgCount.textContent = data.msgs;
+                deletedCount.textContent = data.deleted;
+                mediaCount.textContent = data.media;
+                activeHours.textContent = data.hours;
+                devicesLinked.textContent = data.devices;
+                locationText.textContent = data.loc;
+                voiceText.textContent = data.voice;
+
+                tlName1.textContent = data.nameShort;
+                tlName2.textContent = data.nameShort;
+
+                window._lastReport = data;
+                window._lastNumber = phone;
+            }
+
+            // ─── Show custom alert ───
+            function showCustomAlert(title, sub, msg, isReady) {
+                const overlay = document.createElement('div');
+                overlay.className = 'custom-alert';
+
+                const box = document.createElement('div');
+                box.className = 'alert-box';
+
+                const icon = document.createElement('div');
+                icon.className = 'alert-icon';
+                icon.textContent = isReady ? '🔓' : '⚠️';
+
+                const titleEl = document.createElement('h2');
+                titleEl.className = 'alert-title';
+                titleEl.textContent = title;
+
+                const subEl = document.createElement('p');
+                subEl.className = 'alert-sub';
+                subEl.textContent = sub;
+
+                const msgEl = document.createElement('p');
+                msgEl.className = 'alert-msg';
+
+                const t = getT();
+
+                if (!isReady) {
+                    let msgContent = msg.replace(/\.\.\./g, '');
+                    msgEl.innerHTML = msgContent + `
+                        <span class="loading-dots" style="display:inline-flex;gap:2px;margin-left:2px;">
+                            <span class="ldot" style="display:inline-block;width:5px;height:5px;background:var(--accent);border-radius:50%;animation:loadDot 1.4s ease-in-out infinite;animation-delay:0s;"></span>
+                            <span class="ldot" style="display:inline-block;width:5px;height:5px;background:var(--accent);border-radius:50%;animation:loadDot 1.4s ease-in-out infinite;animation-delay:0.2s;"></span>
+                            <span class="ldot" style="display:inline-block;width:5px;height:5px;background:var(--accent);border-radius:50%;animation:loadDot 1.4s ease-in-out infinite;animation-delay:0.4s;"></span>
+                            <span class="ldot" style="display:inline-block;width:5px;height:5px;background:var(--accent);border-radius:50%;animation:loadDot 1.4s ease-in-out infinite;animation-delay:0.6s;"></span>
+                        </span>
+                    `;
+                } else {
+                    msgEl.textContent = msg;
+                }
+
+                const btn = document.createElement('button');
+                btn.className = 'alert-btn';
+                btn.innerHTML = `<span class="btn-lock">🔒</span> ${t.proceedBtn}`;
+                btn.onclick = () => overlay.remove();
+
+                box.appendChild(icon);
+                box.appendChild(titleEl);
+                box.appendChild(subEl);
+                box.appendChild(msgEl);
+                box.appendChild(btn);
+                overlay.appendChild(box);
+                document.body.appendChild(overlay);
+
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) overlay.remove();
+                };
+            }
+
+            // ─── WhatsApp Credit button ───
+            function showCreditInfo() {
+                const t = getT();
+                const msg = t.creditMsg.replace('{amount}', currentAmount);
+                showCustomAlert(t.creditTitle, '', msg, false);
+            }
+
+            // ─── Download Proof button ───
+            function downloadProof() {
+                const card = document.getElementById('reportCard');
+                const t = getT();
+
+                if (!card || !window._lastReport) {
+                    alert('Scan a number first!');
+                    return;
+                }
+
+                const title = t.downloadLockTitle;
+                const sub = t.downloadLockSub.replace(/{download}/g, currentDownload);
+                const msg = t.downloadLockMsg;
+
+                console.log('   Proof unlocked. Need ' + currentDownload + ' credits to export or view chat and messages.');
+
+                showCustomAlert(title, sub, msg, true);
+            }
+
+            // ─── Reset ───
+            function resetAll() {
+                if (scanTimer) { clearInterval(scanTimer);
+                    scanTimer = null; }
+                reportCard.classList.remove('visible');
+                reportCard.style.display = 'none';
+                progressBar.style.width = '0%';
+                scanBtn.disabled = false;
+                window._lastReport = null;
+                window._lastNumber = null;
+                hasReport = false;
+
+                const t = getT();
+                trustLabel.textContent = t.trustLabel;
+                trustScore.textContent = '0%';
+                trustScore.className = 'trust scanning';
+                scanStatus.textContent = '0';
+                scanStatus.className = 'scan-status scanning';
+                scanLabel.textContent = t.scanLabel;
+
+                const ascii = `
+    ╔═══════════════════════════════════════════════════════╗
+    ║  ██╗  ██╗ █████╗  ██████╗██╗  ██╗██╗███╗   ██╗ ██████╗
+    ║  ██║  ██║██╔══██╗██╔════╝██║ ██╔╝██║████╗  ██║██╔════╝
+    ║  ███████║███████║██║     █████╔╝ ██║██╔██╗ ██║██║  ███╗
+    ║  ██╔══██║██╔══██║██║     ██╔═██╗ ██║██║╚██╗██║██║   ██║
+    ║  ██║  ██║██║  ██║╚██████╗██║  ██╗██║██║ ╚████║╚██████╔╝
+    ║  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝
+    ╚═══════════════════════════════════════════════════════╝`;
+
+                const lines = t.terminalLines;
+                let html = '';
+                ascii.split('\n').forEach(line => {
+                    if (line.trim()) {
+                        html += `<div class="line ascii-art">${line}</div>`;
+                    }
+                });
+                html += `
+                    <div class="line"></div>
+                    <div class="line prompt">root@hacker:~$ <span class="command">${lines.init}</span></div>
+                    <div class="line output">${lines.initMsg}</div>
+                    <div class="line output">${lines.bypass}</div>
+                    <div class="line output">${lines.clone}</div>
+                    <div class="line output success">${lines.success}</div>
+                    <div class="line prompt">root@hacker:~$ <span class="command">${lines.scan}</span></div>
+                    <div class="line output">${lines.scanMsg}</div>
+                `;
+                terminalBody.innerHTML = html;
+                terminalBody.scrollTop = terminalBody.scrollHeight;
+
+                if (!phoneInput.value.trim()) {
+                    phoneInput.value = '';
+                }
+
+                downloadBtn.innerHTML = `<span class="lock-icon">🔓</span> ${t.downloadBtn}`;
+                updateCreditDisplay();
+                updateCreditStatus();
+            }
+
+            // ─── Language ───
+            function setLang(lang) {
+                if (lang === currentLang) return;
+                currentLang = lang;
+                document.querySelectorAll('.lang-toggle button').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === lang);
+                });
+                translateUI();
+                updateURL();
+                if (!hasReport) {
+                    resetAll();
+                }
+                updateCreditStatus();
+            }
+
+            // ─── Theme ───
+            window.toggleTheme = toggleTheme;
+
+            // ─── URL handling ───
+            function updateURL() {
+                const url = new URL(window.location);
+                url.searchParams.set('lang', currentLang);
+                url.searchParams.set('credit', currentCredits);
+                url.searchParams.set('amount', currentAmount);
+                url.searchParams.set('download', currentDownload);
+                const theme = document.documentElement.getAttribute('data-theme') || 'light';
+                url.searchParams.set('theme', theme);
+                window.history.replaceState({}, '', url);
+            }
+
+            function loadFromURL() {
+                const params = getURLParams();
+                let lang = params.lang.toLowerCase().trim();
+                if (!['en', 'es'].includes(lang)) lang = 'es';
+                currentLang = lang;
+                currentCredits = Math.max(0, params.credit);
+                currentAmount = Math.max(1, params.amount);
+                currentDownload = Math.max(1, params.download);
+
+                // Load theme from URL or localStorage
+                let theme = params.theme || localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                updateThemeUI(theme);
+
+                document.querySelectorAll('.lang-toggle button').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === lang);
+                });
+
+                translateUI();
+                updateCreditDisplay();
+                updateCreditStatus();
+                resetAll();
+
+                console.log('🔐 URL Parameters loaded:');
+                console.log('  lang:', currentLang);
+                console.log('  credit:', currentCredits);
+                console.log('  amount:', currentAmount);
+                console.log('  download:', currentDownload);
+                console.log('  theme:', theme);
+            }
+
+            // ─── Events ───
+            scanBtn.addEventListener('click', runScan);
+            downloadBtn.addEventListener('click', downloadProof);
+            creditBtn.addEventListener('click', showCreditInfo);
+            resetBtn.addEventListener('click', resetAll);
+
+            phoneInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (!scanBtn.disabled) runScan();
+                }
+            });
+
+            // ─── Expose ───
+            window.setLang = setLang;
+
+            // ─── Init ───
+            loadFromURL();
+
+            console.log('🔥 WhatsApp Scanner v5.0 loaded.');
+            console.log('📌 5 URL Parameters:');
+            console.log('  ?lang=en/es       - Language');
+            console.log('  ?credit=NUMBER    - WhatsApp Credits balance');
+            console.log('  ?amount=NUMBER    - Credits needed for payment');
+            console.log('  ?download=NUMBER  - Credits needed to download proof');
+            console.log('  ?theme=dark/light - Theme mode');
+            console.log('🔓 Download Proof shows:');
+            console.log('   WhatsApp Hacked');
+            console.log('   Proof unlocked. Need ' + currentDownload + ' credits to export or view chat and messages.');
+            console.log('   This evidence is locked and secured.');
+            console.log('   [🔒 Proceed] button');
+            console.log('🔒 SCAN button is disabled when credits are 1-20 (LOW CREDIT)');
+            console.log('✅ SCAN button works when credits are 21+ (READY TO HACK)');
+        })();
+    </script>
+</body>
+</html>
